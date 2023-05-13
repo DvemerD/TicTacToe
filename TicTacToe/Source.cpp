@@ -10,18 +10,18 @@ LPCTSTR szTitle = L"TicTacToe";
 const int CELL_SIZE = 100;
 HBRUSH hbr1, hbr2;
 HICON hIcon1, hIcon2;
-HWND hEdit;
 int playerTurn = 1;
 int gameBoard[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int winner = 0;
 int wins[3];
-int numPage = 1;
+int numCells = 3;
 
 // Попередній опис функцій
 
 ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK DlgProcSBG(HWND, UINT, WPARAM, LPARAM);
 // Основна програма 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine,
 	int nCmdShow)
@@ -295,7 +295,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				{
 					int ret = MessageBox(hWnd, L"Ви дійсно хочете почати нову гру?", L"New Game", MB_YESNO | MB_ICONQUESTION);
 				
-					if (IDYES == ret)
+					if (ret == IDYES)
 					{
 						//Початок нової гри
 						playerTurn = 1;
@@ -305,6 +305,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						InvalidateRect(hWnd, NULL, TRUE); 
 						UpdateWindow(hWnd);
 					}
+				}
+				break;
+			case IDM_SIZEGAMEBOARD:
+				{
+					DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOGSIZEGAMEBOARD), hWnd, DlgProcSBG, 0);
 				}
 				break;
 			case IDM_EXIT:
@@ -462,4 +467,52 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
 	return 0;
+}
+
+INT_PTR CALLBACK DlgProcSBG(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) //Діалогове вікно для обрання розміру ігрового поля
+{
+	switch (message)
+	{
+	case WM_COMMAND:
+	{
+		switch (LOWORD(wParam))
+		{
+		case ID_OK:
+			{
+				HWND hEdit = GetDlgItem(hWnd, IDC_EDIT);
+
+				// Получение текста из элемента "edit"
+				wchar_t text[256];
+				GetWindowText(hEdit, text, sizeof(text) / sizeof(text[0]));
+
+				// Преобразование текста в число
+				int number = _wtoi(text);
+
+				// Проверка диапазона числа (3-25)
+				if (number < 3 || number > 25)
+				{
+					MessageBox(hWnd, L"Число повинно бути в діапазоні від 3 до 25)!", L"Помилка", MB_OK | MB_ICONERROR);
+				}
+				else
+				{
+					numCells = number;
+					EndDialog(hWnd, 0);
+				}
+			}
+			break;
+		case ID_CANCEL:
+			EndDialog(hWnd, 0);
+			break;
+	
+		}
+
+	}
+		break;
+	case WM_CLOSE:
+		EndDialog(hWnd, 0);
+		break;
+	default:
+		return FALSE;
+	}
+	return FALSE;
 }

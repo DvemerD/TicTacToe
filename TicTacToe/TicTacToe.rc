@@ -71,6 +71,17 @@ BEGIN
     LTEXT           "TODO: диалоговая панель макета",IDC_STATIC,68,4,202,8
 END
 
+IDD_DIALOGSIZEGAMEBOARD DIALOGEX 0, 0, 259, 95
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Розмір ігрового поля"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Прийняти",ID_OK,39,67,50,14
+    PUSHBUTTON      "Відмінити",ID_CANCEL,171,67,50,14
+    EDITTEXT        IDC_EDIT,39,36,182,12,ES_AUTOHSCROLL | ES_NUMBER | NOT WS_BORDER
+    LTEXT           "Оберіть розмір поля в діапазоні чисел від 3 до 25",IDC_STATIC,39,21,182,13
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -82,6 +93,16 @@ GUIDELINES DESIGNINFO
 BEGIN
     IDD_DIALOGBAR, DIALOG
     BEGIN
+    END
+
+    IDD_DIALOGSIZEGAMEBOARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 252
+        VERTGUIDE, 39
+        VERTGUIDE, 221
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -97,7 +118,8 @@ BEGIN
     POPUP "Меню"
     BEGIN
         MENUITEM "Нова гра",                    IDM_NEWGAME
-        MENUITEM "Результати",                  ID_40003
+        MENUITEM "Розмір ігрового поля",        IDM_SIZEGAMEBOARD
+        MENUITEM "Результати",                  IDM_RESULTS
         MENUITEM SEPARATOR
         MENUITEM "Вихід",                       IDM_EXIT
     END
@@ -110,6 +132,17 @@ END
 //
 
 IDB_PNG1                PNG                     "C:\\Users\\teddy\\OneDrive\\Рабочий стол\\icon-x.png"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_DIALOGSIZEGAMEBOARD AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
 
 #endif    // Русский (Россия) resources
 /////////////////////////////////////////////////////////////////////////////
