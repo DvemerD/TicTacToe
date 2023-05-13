@@ -129,6 +129,19 @@
   <ItemGroup>
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TicTacToe.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="C:\Users\teddy\OneDrive\Рабочий стол\icon-o.ico" />
+    <Image Include="C:\Users\teddy\OneDrive\Рабочий стол\icon-x.ico" />
+    <Image Include="C:\Users\teddy\OneDrive\Рабочий стол\icon-x.png" />
+    <Image Include="icon.ico" />
+    <Image Include="icon1.ico" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
