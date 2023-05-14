@@ -1,20 +1,25 @@
 #include <windows.h> // підключення бібліотеки з функціями API
 #include "resource.h" // підключення файлу ресурсів
 #include <windowsx.h>
+#include <vector>
+
+#include <string>
 
 // Глобальні змінні:
 HINSTANCE hInst; 	//Дескриптор програми	
 LPCTSTR szWindowClass = L"Rybkin";
 LPCTSTR szTitle = L"TicTacToe";
 
-const int CELL_SIZE = 100;
+const int CELL_SIZE = 50;
+int numCells = 5;
 HBRUSH hbr1, hbr2;
 HICON hIcon1, hIcon2;
 int playerTurn = 1;
-int gameBoard[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
+//int gameBoard[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
+std::vector<int> gameBoard((numCells * numCells), 0);
+
 int winner = 0;
 int wins[3];
-int numCells = 3;
 
 // Попередній опис функцій
 
@@ -102,11 +107,11 @@ BOOL GetGameBoardRect(HWND hWnd, RECT* pRect)
 		int width = rc.right - rc.left;
 		int height = rc.bottom - rc.top;
 
-		pRect->left = (width - CELL_SIZE * 3) / 2;
-		pRect->top = (height - CELL_SIZE * 3) / 2;
+		pRect->left = (width - CELL_SIZE * numCells) / 2;
+		pRect->top = (height - CELL_SIZE * numCells) / 2;
 
-		pRect->right = pRect->left + CELL_SIZE * 3;
-		pRect->bottom = pRect->top + CELL_SIZE * 3;
+		pRect->right = pRect->left + CELL_SIZE * numCells;
+		pRect->bottom = pRect->top + CELL_SIZE * numCells;
 
 		return TRUE;
 	}
@@ -139,7 +144,7 @@ int GetCellNumberFromPoint(HWND hWnd, int x, int y)
 			int row = y / CELL_SIZE;
 			
 			//конвертація в індекс
-			return column + row * 3;
+			return column + row * numCells;
 		}
 	}
 
@@ -152,14 +157,14 @@ BOOL GetCellRect(HWND hWnd, int index, RECT* pRect)
 
 	SetRectEmpty(pRect);
 
-	if (index < 0 || index > 8)
+	if (index < 0 || index > (gameBoard.size() - 1))
 		return FALSE;
 
 	if (GetGameBoardRect(hWnd, &rcBoard))
 	{
 		//Конвертація індексу в x, y
-		int y = index / 3; //Номер рядка
-		int x = index % 3; //Номер стовбця
+		int y = index / numCells; //Номер рядка
+		int x = index % numCells; //Номер стовбця
 
 		pRect->left = rcBoard.left + x * CELL_SIZE + 1;
 		pRect->top = rcBoard.top + y * CELL_SIZE + 1;
@@ -174,8 +179,8 @@ BOOL GetCellRect(HWND hWnd, int index, RECT* pRect)
 /*
 Повертає:
 0 - Нема переможця
-1 - Гравець переміг
-2 - Гравець переміг
+1 - 1 Гравець переміг
+2 - 2 Гравець переміг
 3 - Нічия
 */
 
@@ -197,8 +202,8 @@ int GetWinner(int wins[3])
 	}
 
 	//Первірка чи маємо ми ще пусту клітинку
-	for (int i = 0; i < ARRAYSIZE(gameBoard); ++i)
-		if (0 == gameBoard[i])
+	for (int i = 0; i < gameBoard.size(); ++i)
+		if (gameBoard[i] == 0)
 			return 0; //продовжуємо гру
 	
 	//Нічия
@@ -257,9 +262,9 @@ void ShowWinner(HWND hWnd, HDC hdc)
 {
 	RECT rcWin;
 
-	for (int i = 0; i < 3; ++i)
+	for (int i = 0; i < (gameBoard.size() - 1); ++i)
 	{
-		if (GetCellRect(hWnd, wins[i], &rcWin))
+		if (GetCellRect(hWnd, wins[i], &rcWin)) //Якщо індекс елементу є в масиві переможця то ми цей елемент замальовуємо 
 		{
 			FillRect(hdc, &rcWin, hbr1);
 			DrawIconCentered(hdc, &rcWin, (winner == 1) ? hIcon1 : hIcon2);
@@ -300,7 +305,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						//Початок нової гри
 						playerTurn = 1;
 						winner = 0;
-						ZeroMemory(gameBoard, sizeof(gameBoard));
+						gameBoard.assign(gameBoard.size(), 0);
 						
 						InvalidateRect(hWnd, NULL, TRUE); 
 						UpdateWindow(hWnd);
@@ -352,7 +357,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						DrawIconCentered(hdc, &rcCell, (playerTurn == 1) ? hIcon1 : hIcon2);
 
 						//Перевірка на переможця
-						winner = GetWinner(wins);
+						//winner = GetWinner(wins);
+						winner = 0;
 						if (winner == 1 || winner == 2)
 						{
 							ShowWinner(hWnd, hdc);
@@ -391,8 +397,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			MINMAXINFO* pMinMax = (MINMAXINFO*)lParam;
 
-			pMinMax->ptMinTrackSize.x = CELL_SIZE * 5;
-			pMinMax->ptMinTrackSize.y = CELL_SIZE * 5;
+			pMinMax->ptMinTrackSize.x = CELL_SIZE * (numCells + 2);
+			pMinMax->ptMinTrackSize.y = CELL_SIZE * (numCells + 4);
 		}
 		break;
 	case WM_PAINT: 				//Перемалювати вікно
@@ -425,7 +431,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			FillRect(hdc, &rc, (HBRUSH)GetStockObject(WHITE_BRUSH));
 			//Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
 
-			for (int i = 0; i < 4; i++)
+			for (int i = 0; i < numCells + 1; i++)
 			{
 				//Малювання вертикальних ліній
 				DrawLine(hdc, rc.left + CELL_SIZE * i, rc.top, rc.left + CELL_SIZE * i, rc.bottom);
@@ -436,7 +442,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//Малювання всіх зайнятих клітинок
 			RECT rcCell;
 
-			for (int i = 0; i < ARRAYSIZE(gameBoard); ++i)
+			for (int i = 0; i < gameBoard.size(); ++i)
 			{
 				if ((0 != gameBoard[i]) && GetCellRect(hWnd, i, &rcCell))
 				{
@@ -496,16 +502,23 @@ INT_PTR CALLBACK DlgProcSBG(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 				else
 				{
 					numCells = number;
+					gameBoard.resize((numCells * numCells));
+					playerTurn = 1;
+					winner = 0;
+					gameBoard.assign(gameBoard.size(), 0);
+
 					EndDialog(hWnd, 0);
+
+					//Оновлення вікна після зміни розміру ігрового поля
+					InvalidateRect(GetParent(hWnd), NULL, TRUE);
+					UpdateWindow(GetParent(hWnd));
 				}
 			}
 			break;
 		case ID_CANCEL:
 			EndDialog(hWnd, 0);
 			break;
-	
 		}
-
 	}
 		break;
 	case WM_CLOSE:
