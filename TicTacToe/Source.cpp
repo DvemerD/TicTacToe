@@ -11,7 +11,7 @@ LPCTSTR szWindowClass = L"Rybkin";
 LPCTSTR szTitle = L"TicTacToe";
 
 const int CELL_SIZE = 50;
-int numCells = 5;
+int numCells = 3;
 HBRUSH hbr1, hbr2;
 HICON hIcon1, hIcon2;
 int playerTurn = 1;
@@ -111,7 +111,7 @@ BOOL GetGameBoardRect(HWND hWnd, RECT* pRect)
 		pRect->top = (height - CELL_SIZE * numCells) / 2;
 
 		pRect->right = pRect->left + CELL_SIZE * numCells;
-		pRect->bottom = pRect->top + CELL_SIZE * numCells;
+		pRect->bottom = pRect->top + CELL_SIZE * numCells;		
 
 		return TRUE;
 	}
@@ -184,7 +184,7 @@ BOOL GetCellRect(HWND hWnd, int index, RECT* pRect)
 3 - Нічия
 */
 
-int GetWinner(int wins[3])
+/*int GetWinner(int wins[3])
 {
 	int cells[] = { 0,1,2, 3,4,5, 6,7,8, 0,3,6, 1,4,7 ,2,5,8, 0,4,8, 2,4,6 };
 
@@ -208,7 +208,173 @@ int GetWinner(int wins[3])
 	
 	//Нічия
 	return 3;
+
+	
+	for (int row = 0; row < numCells; row++) {
+		for (int col = 0; col <= numCells - 5; col++) {
+			int startCell = row * numCells + col;
+			int player = gameBoard[startCell];
+			if (player == 0) continue; // Пропускаем пустые ячейки
+			bool win = true;
+			for (int i = 1; i < 3; i++) {
+				if (gameBoard[startCell + i] != player || (startCell + i) % numCells < col + i) {
+					win = false;
+					break;
+				}
+			}
+			if (win) return player;
+		}
+	}
+
+	// Проверка вертикалей
+	for (int col = 0; col < numCells; col++) {
+		for (int row = 0; row <= numCells - 5; row++) {
+			int startCell = row * numCells + col;
+			int player = gameBoard[startCell];
+			if (player == 0) continue; // Пропускаем пустые ячейки
+			bool win = true;
+			for (int i = 1; i < 5; i++) {
+				if (gameBoard[startCell + i * numCells] != player) {
+					win = false;
+					break;
+				}
+			}
+			if (win) return player;
+		}
+	}
+
+	// Checking diagonals (right top to left bottom)
+	for (int row = 0; row <= numCells - 5; row++) {
+		for (int col = numCells - 1; col >= 4; col--) {
+			int startCell = row * numCells + col;
+			int player = gameBoard[startCell];
+			if (player == 0) continue; // Skip empty cells
+			bool win = true;
+			for (int i = 1; i < 5; i++) {
+				if (gameBoard[startCell + i * (numCells - 1)] != player) {
+					win = false;
+					break;
+				}
+			}
+			if (win) return player;
+		}
+	}
+
+	// Check for empty cells
+	for (int cell : gameBoard) {
+		if (cell == 0) return 0; // Game is still ongoing
+	}
+
+	// Draw
+	return 3;
 }
+*/
+
+int GetWinner(int size, int winLength)
+{
+	// Проверка на выигрышную комбинацию по горизонтали
+	for (int row = 0; row < size; ++row)
+	{
+		for (int col = 0; col <= size - winLength; ++col)
+		{
+			int startIndex = row * size + col;
+			int symbol = gameBoard[startIndex];
+			if (symbol != 0)
+			{
+				bool win = true;
+				for (int i = 1; i < winLength; ++i)
+				{
+					if (gameBoard[startIndex + i] != symbol)
+					{
+						win = false;
+						break;
+					}
+				}
+				if (win)
+					return symbol;
+			}
+		}
+	}
+
+	// Проверка на выигрышную комбинацию по вертикали
+	for (int col = 0; col < size; ++col)
+	{
+		for (int row = 0; row <= size - winLength; ++row)
+		{
+			int startIndex = row * size + col;
+			int symbol = gameBoard[startIndex];
+			if (symbol != 0)
+			{
+				bool win = true;
+				for (int i = 1; i < winLength; ++i)
+				{
+					if (gameBoard[startIndex + i * size] != symbol)
+					{
+						win = false;
+						break;
+					}
+				}
+				if (win)
+					return symbol;
+			}
+		}
+	}
+
+	// Проверка на выигрышную комбинацию по диагоналям
+	for (int row = 0; row <= size - winLength; ++row)
+	{
+		for (int col = 0; col <= size - winLength; ++col)
+		{
+			int startIndex = row * size + col;
+			int symbol = gameBoard[startIndex];
+			if (symbol != 0)
+			{
+				// Проверка по диагонали слева направо (\)
+				bool win = true;
+				for (int i = 1; i < winLength; ++i)
+				{
+					if (gameBoard[startIndex + i * (size + 1)] != symbol)
+					{
+						win = false;
+						break;
+					}
+				}
+				if (win)
+					return symbol;
+
+				// Проверка по диагонали справа налево (/)
+				win = true;
+				for (int i = 1; i < winLength; ++i)
+				{
+					if (gameBoard[startIndex + i * (size - 1)] != symbol)
+					{
+						win = false;
+						break;
+					}
+				}
+				if (win)
+					return symbol;
+			}
+		}
+	}
+
+	// Ничья (если все ячейки заполнены)
+	bool draw = true;
+	for (int i = 0; i < size * size; ++i)
+	{
+		if (gameBoard[i] == 0)
+		{
+			draw = false;
+			break;
+		}
+	}
+	if (draw)
+		return 3;
+
+	// Нет победителя
+	return 0;
+}
+
 
 void ShowTurn(HWND hWnd, HDC hdc)
 {
@@ -262,14 +428,14 @@ void ShowWinner(HWND hWnd, HDC hdc)
 {
 	RECT rcWin;
 
-	for (int i = 0; i < (gameBoard.size() - 1); ++i)
+	/*for (int i = 0; i < (gameBoard.size() - 1); ++i)
 	{
 		if (GetCellRect(hWnd, wins[i], &rcWin)) //Якщо індекс елементу є в масиві переможця то ми цей елемент замальовуємо 
 		{
 			FillRect(hdc, &rcWin, hbr1);
 			DrawIconCentered(hdc, &rcWin, (winner == 1) ? hIcon1 : hIcon2);
 		}
-	}
+	}*/
 }
 
 // FUNCTION: WndProc (HWND, unsigned, WORD, LONG)
@@ -357,8 +523,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						DrawIconCentered(hdc, &rcCell, (playerTurn == 1) ? hIcon1 : hIcon2);
 
 						//Перевірка на переможця
-						//winner = GetWinner(wins);
-						winner = 0;
+						int minLength = numCells > 5 ? 5 : 3;
+						winner = GetWinner(numCells, minLength);
+						//winner = 0;
 						if (winner == 1 || winner == 2)
 						{
 							ShowWinner(hWnd, hdc);
@@ -487,29 +654,29 @@ INT_PTR CALLBACK DlgProcSBG(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			{
 				HWND hEdit = GetDlgItem(hWnd, IDC_EDIT);
 
-				// Получение текста из элемента "edit"
+				//Отримання тексту з елементу "edit"
 				wchar_t text[256];
 				GetWindowText(hEdit, text, sizeof(text) / sizeof(text[0]));
 
-				// Преобразование текста в число
+				//Перетворення тексту в число
 				int number = _wtoi(text);
 
-				// Проверка диапазона числа (3-25)
+				//Перевірка діапазону числа (3-25)
 				if (number < 3 || number > 25)
 				{
-					MessageBox(hWnd, L"Число повинно бути в діапазоні від 3 до 25)!", L"Помилка", MB_OK | MB_ICONERROR);
+					MessageBox(hWnd, L"Число повинно бути в діапазоні від 3 до 25!", L"Помилка", MB_OK | MB_ICONERROR);
 				}
 				else
 				{
-					numCells = number;
-					gameBoard.resize((numCells * numCells));
-					playerTurn = 1;
-					winner = 0;
-					gameBoard.assign(gameBoard.size(), 0);
+					numCells = number; //Змінюємо розмір поля
+					gameBoard.resize((numCells * numCells)); //Зміна розміру масива для ігрового поля
+					playerTurn = 1; //Ставимо гравця по дефолту 1
+					winner = 0; //Переможця поки що нема
+					gameBoard.assign(gameBoard.size(), 0); //Очищуємо масив ігрового поля
 
 					EndDialog(hWnd, 0);
 
-					//Оновлення вікна після зміни розміру ігрового поля
+					//Оновлюємо вікно після зміни розміру ігрового поля
 					InvalidateRect(GetParent(hWnd), NULL, TRUE);
 					UpdateWindow(GetParent(hWnd));
 				}
