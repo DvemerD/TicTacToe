@@ -184,92 +184,6 @@ BOOL GetCellRect(HWND hWnd, int index, RECT* pRect)
 3 - Нічия
 */
 
-/*int GetWinner(int wins[3])
-{
-	int cells[] = { 0,1,2, 3,4,5, 6,7,8, 0,3,6, 1,4,7 ,2,5,8, 0,4,8, 2,4,6 };
-
-	//перевірка на переможця
-	for (int i = 0; i < ARRAYSIZE(cells); i += 3)
-	{
-		if ((0 != gameBoard[cells[i]]) && gameBoard[cells[i]] == gameBoard[cells[i + 1]] && gameBoard[cells[i]] == gameBoard[cells[i + 2]])
-		{
-			wins[0] = cells[i];
-			wins[1] = cells[i + 1];
-			wins[2] = cells[i + 2];
-
-			return gameBoard[cells[i]];
-		}
-	}
-
-	//Первірка чи маємо ми ще пусту клітинку
-	for (int i = 0; i < gameBoard.size(); ++i)
-		if (gameBoard[i] == 0)
-			return 0; //продовжуємо гру
-	
-	//Нічия
-	return 3;
-
-	
-	for (int row = 0; row < numCells; row++) {
-		for (int col = 0; col <= numCells - 5; col++) {
-			int startCell = row * numCells + col;
-			int player = gameBoard[startCell];
-			if (player == 0) continue; // Пропускаем пустые ячейки
-			bool win = true;
-			for (int i = 1; i < 3; i++) {
-				if (gameBoard[startCell + i] != player || (startCell + i) % numCells < col + i) {
-					win = false;
-					break;
-				}
-			}
-			if (win) return player;
-		}
-	}
-
-	// Проверка вертикалей
-	for (int col = 0; col < numCells; col++) {
-		for (int row = 0; row <= numCells - 5; row++) {
-			int startCell = row * numCells + col;
-			int player = gameBoard[startCell];
-			if (player == 0) continue; // Пропускаем пустые ячейки
-			bool win = true;
-			for (int i = 1; i < 5; i++) {
-				if (gameBoard[startCell + i * numCells] != player) {
-					win = false;
-					break;
-				}
-			}
-			if (win) return player;
-		}
-	}
-
-	// Checking diagonals (right top to left bottom)
-	for (int row = 0; row <= numCells - 5; row++) {
-		for (int col = numCells - 1; col >= 4; col--) {
-			int startCell = row * numCells + col;
-			int player = gameBoard[startCell];
-			if (player == 0) continue; // Skip empty cells
-			bool win = true;
-			for (int i = 1; i < 5; i++) {
-				if (gameBoard[startCell + i * (numCells - 1)] != player) {
-					win = false;
-					break;
-				}
-			}
-			if (win) return player;
-		}
-	}
-
-	// Check for empty cells
-	for (int cell : gameBoard) {
-		if (cell == 0) return 0; // Game is still ongoing
-	}
-
-	// Draw
-	return 3;
-}
-*/
-
 int GetWinner(int size, int winLength)
 {
 	// Проверка на выигрышную комбинацию по горизонтали
@@ -320,7 +234,7 @@ int GetWinner(int size, int winLength)
 		}
 	}
 
-	// Проверка на выигрышную комбинацию по диагоналям
+	// Проверка на выигрышную комбинацию по диагонали слева направо (\)
 	for (int row = 0; row <= size - winLength; ++row)
 	{
 		for (int col = 0; col <= size - winLength; ++col)
@@ -329,7 +243,6 @@ int GetWinner(int size, int winLength)
 			int symbol = gameBoard[startIndex];
 			if (symbol != 0)
 			{
-				// Проверка по диагонали слева направо (\)
 				bool win = true;
 				for (int i = 1; i < winLength; ++i)
 				{
@@ -341,9 +254,20 @@ int GetWinner(int size, int winLength)
 				}
 				if (win)
 					return symbol;
+			}
+		}
+	}
 
-				// Проверка по диагонали справа налево (/)
-				win = true;
+	// Проверка на выигрышную комбинацию по диагонали справа налево (/)
+	for (int row = 0; row <= size - winLength; ++row)
+	{
+		for (int col = winLength - 1; col < size; ++col)
+		{
+			int startIndex = row * size + col;
+			int symbol = gameBoard[startIndex];
+			if (symbol != 0)
+			{
+				bool win = true;
 				for (int i = 1; i < winLength; ++i)
 				{
 					if (gameBoard[startIndex + i * (size - 1)] != symbol)
@@ -374,7 +298,6 @@ int GetWinner(int size, int winLength)
 	// Нет победителя
 	return 0;
 }
-
 
 void ShowTurn(HWND hWnd, HDC hdc)
 {
@@ -436,6 +359,44 @@ void ShowWinner(HWND hWnd, HDC hdc)
 			DrawIconCentered(hdc, &rcWin, (winner == 1) ? hIcon1 : hIcon2);
 		}
 	}*/
+}
+
+bool WriteTextToFile(const std::wstring& filePath, const std::wstring& text)
+{
+	HANDLE hFile = CreateFileW(
+		filePath.c_str(),
+		GENERIC_WRITE,
+		0,
+		NULL,
+		CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL
+	);
+
+	if (hFile == INVALID_HANDLE_VALUE) {
+		
+		return false;
+	}
+
+	DWORD dwBytesToWrite = static_cast<DWORD>(text.size() * sizeof(wchar_t));
+	DWORD dwBytesWritten;
+
+	BOOL result = WriteFile(
+		hFile,
+		text.c_str(),
+		dwBytesToWrite,
+		&dwBytesWritten,
+		NULL
+	);
+
+	CloseHandle(hFile);
+
+	if (!result) {
+		
+		return false;
+	}
+
+	return true;
 }
 
 // FUNCTION: WndProc (HWND, unsigned, WORD, LONG)
@@ -537,6 +498,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 								L"Перемога!", 
 								MB_OK | MB_ICONINFORMATION);
 							playerTurn = 0;
+							//WriteTextToFile();
 						}
 						else if (winner == 3)
 						{
@@ -661,10 +623,10 @@ INT_PTR CALLBACK DlgProcSBG(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 				//Перетворення тексту в число
 				int number = _wtoi(text);
 
-				//Перевірка діапазону числа (3-25)
-				if (number < 3 || number > 25)
+				//Перевірка діапазону числа (3-15)
+				if (number < 3 || number > 15)
 				{
-					MessageBox(hWnd, L"Число повинно бути в діапазоні від 3 до 25!", L"Помилка", MB_OK | MB_ICONERROR);
+					MessageBox(hWnd, L"Число повинно бути в діапазоні від 3 до 15!", L"Помилка", MB_OK | MB_ICONERROR);
 				}
 				else
 				{
