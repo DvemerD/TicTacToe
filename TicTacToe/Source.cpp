@@ -2,6 +2,7 @@
 #include "resource.h" // підключення файлу ресурсів
 #include <windowsx.h>
 #include <vector>
+#include <ctime>
 
 #include <string>
 
@@ -347,57 +348,94 @@ void DrawIconCentered(HDC hdc, RECT* pRect, HICON hIcon)
 	}
 }
 
-void ShowWinner(HWND hWnd, HDC hdc)
+/*void ShowWinner(HWND hWnd, HDC hdc)
 {
 	RECT rcWin;
 
-	/*for (int i = 0; i < (gameBoard.size() - 1); ++i)
+	for (int i = 0; i < (gameBoard.size() - 1); ++i)
 	{
 		if (GetCellRect(hWnd, wins[i], &rcWin)) //Якщо індекс елементу є в масиві переможця то ми цей елемент замальовуємо 
 		{
 			FillRect(hdc, &rcWin, hbr1);
 			DrawIconCentered(hdc, &rcWin, (winner == 1) ? hIcon1 : hIcon2);
 		}
-	}*/
-}
+	}
+}*/
 
-bool WriteTextToFile(const std::wstring& filePath, const std::wstring& text)
+void SaveGameResult(int winner)
 {
-	HANDLE hFile = CreateFileW(
-		filePath.c_str(),
-		GENERIC_WRITE,
-		0,
-		NULL,
-		CREATE_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL,
-		NULL
-	);
+	// Получение текущей даты и времени
+	time_t now = time(0);
+	struct tm timeInfo;
+	localtime_s(&timeInfo, &now);
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		
-		return false;
+	// Формирование строки с датой и временем
+	char dateTimeStr[100];
+	strftime(dateTimeStr, sizeof(dateTimeStr), "%Y-%m-%d %H:%M:%S", &timeInfo);
+
+	// Формирование строки с результатом игры
+	std::string resultStr = "Date: " + std::string(dateTimeStr) + " Winner: Player " + std::to_string(winner) + "\n";
+
+	// Открытие файла для добавления результатов
+	std::string filePath = "result.txt";
+	HANDLE hFile = CreateFileA(filePath.c_str(), FILE_APPEND_DATA, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile != INVALID_HANDLE_VALUE)
+	{
+		// Установка указателя файла в начало
+		SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+
+		DWORD bytesWritten;
+		BOOL result = WriteFile(hFile, resultStr.c_str(), resultStr.length(), &bytesWritten, NULL);
+		if (result)
+		{
+			// Успешная запись в файл
+			CloseHandle(hFile);
+		}
+		else
+		{
+			// Обработка ошибки записи в файл
+			MessageBoxA(NULL, "Failed to write to file", "Error", MB_OK | MB_ICONERROR);
+			CloseHandle(hFile);
+		}
 	}
-
-	DWORD dwBytesToWrite = static_cast<DWORD>(text.size() * sizeof(wchar_t));
-	DWORD dwBytesWritten;
-
-	BOOL result = WriteFile(
-		hFile,
-		text.c_str(),
-		dwBytesToWrite,
-		&dwBytesWritten,
-		NULL
-	);
-
-	CloseHandle(hFile);
-
-	if (!result) {
-		
-		return false;
+	else
+	{
+		// Обработка ошибки открытия файла
+		MessageBoxA(NULL, "Failed to open file for writing", "Error", MB_OK | MB_ICONERROR);
 	}
-
-	return true;
 }
+
+void DisplayGameResults()
+{
+	std::string filePath = "result.txt";
+	HANDLE hFile = CreateFileA(filePath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hFile != INVALID_HANDLE_VALUE)
+	{
+		DWORD fileSize = GetFileSize(hFile, NULL);
+		char* fileContent = new char[fileSize + 1];
+
+		DWORD bytesRead;
+		BOOL result = ReadFile(hFile, fileContent, fileSize, &bytesRead, NULL);
+		if (result)
+		{
+			fileContent[bytesRead] = '\0';
+			MessageBoxA(NULL, fileContent, "Game Results", MB_OK | MB_ICONINFORMATION);
+		}
+		else
+		{
+			MessageBoxA(NULL, "Failed to read file", "Error", MB_OK | MB_ICONERROR);
+		}
+
+		delete[] fileContent;
+		CloseHandle(hFile);
+	}
+	else
+	{
+		MessageBoxA(NULL, "Failed to open file for reading", "Error", MB_OK | MB_ICONERROR);
+	}
+}
+
 
 // FUNCTION: WndProc (HWND, unsigned, WORD, LONG)
 // Віконна процедура. Приймає і обробляє всі повідомлення, що приходять в додаток
@@ -442,6 +480,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case IDM_SIZEGAMEBOARD:
 				{
 					DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOGSIZEGAMEBOARD), hWnd, DlgProcSBG, 0);
+				}
+				break;
+			case IDM_RESULTS:
+				{
+					DisplayGameResults();
 				}
 				break;
 			case IDM_EXIT:
@@ -489,7 +532,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						//winner = 0;
 						if (winner == 1 || winner == 2)
 						{
-							ShowWinner(hWnd, hdc);
+							//ShowWinner(hWnd, hdc);
 
 							//Маємо переможця
 							MessageBox(
@@ -498,7 +541,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 								L"Перемога!", 
 								MB_OK | MB_ICONINFORMATION);
 							playerTurn = 0;
-							//WriteTextToFile();
+							SaveGameResult(winner);
 						}
 						else if (winner == 3)
 						{
@@ -580,11 +623,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 			}
 
-			if (winner == 1 || winner == 2)
+			/*if (winner == 1 || winner == 2)
 			{
 				//Відображення переможця
 				ShowWinner(hWnd, hdc);
 			}
+			*/
 		}
 
 		EndPaint(hWnd, &ps); 		//Закінчити графічний вивід	
