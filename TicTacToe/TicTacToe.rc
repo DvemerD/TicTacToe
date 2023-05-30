@@ -82,6 +82,15 @@ BEGIN
     LTEXT           "Оберіть розмір поля в діапазоні чисел від 3 до 25",IDC_STATIC,39,21,182,13
 END
 
+IDD_DIALOG1 DIALOGEX 0, 0, 310, 177
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Результати"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "ОК",IDOK,253,156,50,14
+    LISTBOX         IDC_LIST,7,7,241,163,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -103,6 +112,14 @@ BEGIN
         VERTGUIDE, 221
         TOPMARGIN, 7
         BOTTOMMARGIN, 88
+    END
+
+    IDD_DIALOG1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 303
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 170
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -140,6 +157,11 @@ IDB_PNG1                PNG                     "C:\\Users\\teddy\\OneDrive\\Раб
 //
 
 IDD_DIALOGSIZEGAMEBOARD AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DIALOG1 AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

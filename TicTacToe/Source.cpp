@@ -28,6 +28,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK DlgProcSBG(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK DlgProcRES(HWND, UINT, WPARAM, LPARAM);
 // Основна програма 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine,
 	int nCmdShow)
@@ -405,7 +406,7 @@ void SaveGameResult(int winner)
 	}
 }
 
-void DisplayGameResults()
+void DisplayGameResults(HWND hListBox)
 {
 	std::string filePath = "result.txt";
 	HANDLE hFile = CreateFileA(filePath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -420,7 +421,20 @@ void DisplayGameResults()
 		if (result)
 		{
 			fileContent[bytesRead] = '\0';
-			MessageBoxA(NULL, fileContent, "Game Results", MB_OK | MB_ICONINFORMATION);
+
+			// Очистка списка перед добавлением новых элементов
+			SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
+
+			// Разделение содержимого файла на отдельные строки
+			char* nextToken = nullptr;
+			char* line = strtok_s(fileContent, "\r\n", &nextToken);
+			while (line != nullptr)
+			{
+				// Добавление строки в список
+				SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)line);
+
+				line = strtok_s(nullptr, "\r\n", &nextToken);
+			}
 		}
 		else
 		{
@@ -435,6 +449,7 @@ void DisplayGameResults()
 		MessageBoxA(NULL, "Failed to open file for reading", "Error", MB_OK | MB_ICONERROR);
 	}
 }
+
 
 
 // FUNCTION: WndProc (HWND, unsigned, WORD, LONG)
@@ -455,6 +470,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//Завантаження іконків гравців
 			hIcon1 = LoadIcon(hInst, MAKEINTRESOURCE(IDI_PLAYER1));
 			hIcon2 = LoadIcon(hInst, MAKEINTRESOURCE(IDI_PLAYER2));
+
+			int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+			int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+			// Розгорнути вікно на весь екран
+			SetWindowPos(hWnd, HWND_TOP, 0, 0, screenWidth, screenHeight, SWP_SHOWWINDOW);
 		}
 		break;
 	case WM_COMMAND:
@@ -484,7 +505,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				break;
 			case IDM_RESULTS:
 				{
-					DisplayGameResults();
+					DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, DlgProcRES, 0);
 				}
 				break;
 			case IDM_EXIT:
@@ -522,8 +543,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					{
 						gameBoard[index] = playerTurn;
 
-						//FillRect(hdc, &rcCell, (playerTurn == 2) ? hbr2 : hbr1); 
-						//DrawIcon(hdc, rcCell.left, rcCell.top, (playerTurn == 1) ? hIcon1 : hIcon2);
 						DrawIconCentered(hdc, &rcCell, (playerTurn == 1) ? hIcon1 : hIcon2);
 
 						//Перевірка на переможця
@@ -701,4 +720,38 @@ INT_PTR CALLBACK DlgProcSBG(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		return FALSE;
 	}
 	return FALSE;
+}
+
+INT_PTR CALLBACK DlgProcRES(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+	case WM_INITDIALOG:
+	{
+		HWND hListBox = GetDlgItem(hWnd, IDC_LIST);
+		DisplayGameResults(hListBox);
+
+		return TRUE;
+		break;
+	}
+	case WM_COMMAND:
+	{
+		switch (LOWORD(wParam))
+		{
+		case IDOK:
+		{
+			EndDialog(hWnd, 0);
+		}
+		break;
+		}
+		break;
+	case WM_CLOSE:
+		EndDialog(hWnd, 0);
+		break;
+	default:
+		return FALSE;
+	}
+
+	return FALSE;
+	}
 }

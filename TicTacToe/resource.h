@@ -9,10 +9,13 @@
 #define IDI_PLAYER1                     112
 #define IDI_PLAYER2                     113
 #define IDD_DIALOGSIZEGAMEBOARD         114
-#define IDC_EDIT1                       1001
+#define IDD_DIALOG1                     118
 #define IDC_EDIT                        1001
 #define ID_CANCEL                       1002
 #define ID_OK                           1003
+#define IDOK                            1005
+#define IDC_LIST1                       1007
+#define IDC_LIST                        1007
 #define ID_40001                        40001
 #define ID_40002                        40002
 #define ID_40003                        40003
@@ -28,9 +31,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        116
+#define _APS_NEXT_RESOURCE_VALUE        120
 #define _APS_NEXT_COMMAND_VALUE         40011
-#define _APS_NEXT_CONTROL_VALUE         1004
+#define _APS_NEXT_CONTROL_VALUE         1008
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
